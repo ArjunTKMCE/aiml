@@ -1,0 +1,107 @@
+
+# =====================================================
+# SECTION 4: SUPPORT VECTOR MACHINE (SVM)
+# =====================================================
+
+# -------------------------
+# A. SUPPORT VECTOR REGRESSION
+# -------------------------
+
+print("SUPPORT VECTOR REGRESSION (SVR)")
+
+# Use a sample to reduce training time
+sample_size = min(10000, len(X_train))
+
+X_svm_train = X_train.sample(
+    n=sample_size,
+    random_state=42
+)
+
+y_svm_train = y_train.loc[X_svm_train.index]
+
+svr_model = Pipeline([
+    ("imputer", SimpleImputer(strategy="median")),
+    ("scaler", StandardScaler()),
+    ("model", SVR(kernel="rbf", C=10))
+])
+
+svr_model.fit(X_svm_train, y_svm_train)
+
+svr_pred = svr_model.predict(X_test)
+
+print("MAE:", mean_absolute_error(y_test, svr_pred))
+print("RMSE:", np.sqrt(mean_squared_error(y_test, svr_pred)))
+print("R2 Score:", r2_score(y_test, svr_pred))
+
+# Simple graph
+plt.figure(figsize=(8, 4))
+
+plt.plot(y_test.iloc[:200].values,
+         label="Actual")
+
+plt.plot(svr_pred[:200],
+         label="Predicted")
+
+plt.title("SVM Regression (SVR)")
+plt.xlabel("Test Records")
+plt.ylabel("Zone 1 Consumption")
+plt.legend()
+plt.grid(alpha=0.3)
+plt.show()
+
+
+# ---------------------------------
+# B. SUPPORT VECTOR CLASSIFICATION
+# ---------------------------------
+
+print("\nSUPPORT VECTOR CLASSIFICATION (SVC)")
+
+X_svc_train = X_train.sample(
+    n=sample_size,
+    random_state=42
+)
+
+y_svc_train = y_train_class.loc[X_svc_train.index]
+
+svc_model = Pipeline([
+    ("imputer", SimpleImputer(strategy="median")),
+    ("scaler", StandardScaler()),
+    ("model", SVC(kernel="rbf"))
+])
+
+svc_model.fit(X_svc_train, y_svc_train)
+
+svc_pred = svc_model.predict(X_test)
+
+print("Accuracy:",
+      accuracy_score(y_test_class, svc_pred))
+
+print("\nClassification Report:")
+print(classification_report(
+    y_test_class,
+    svc_pred,
+    zero_division=0
+))
+
+# Simple confusion matrix
+cm = confusion_matrix(
+    y_test_class,
+    svc_pred,
+    labels=["Low", "Medium", "High"]
+)
+
+plt.figure(figsize=(5, 4))
+
+sns.heatmap(
+    cm,
+    annot=True,
+    fmt="d",
+    cmap="Oranges",
+    xticklabels=["Low", "Medium", "High"],
+    yticklabels=["Low", "Medium", "High"]
+)
+
+plt.title("SVM Classification")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.show()

@@ -1,0 +1,209 @@
+import heapq
+import networkx as nx
+import matplotlib.pyplot as plt
+
+
+# -----------------------------
+# A* Algorithm
+# -----------------------------
+
+def a_star(graph, start, goal, heuristic):
+
+    open_list = []
+    heapq.heappush(open_list, (0, start))
+
+    g_cost = {start: 0}
+    parent = {start: None}
+
+    while open_list:
+
+        f, current = heapq.heappop(open_list)
+
+        # Goal reached
+        if current == goal:
+
+            path = []
+
+            while current is not None:
+                path.append(current)
+                current = parent[current]
+
+            path.reverse()
+
+            return path, g_cost[goal]
+
+        # Check neighbors
+        for neighbor, cost in graph[current]:
+
+            new_g = g_cost[current] + cost
+
+            if neighbor not in g_cost or new_g < g_cost[neighbor]:
+
+                g_cost[neighbor] = new_g
+
+                f = new_g + heuristic[neighbor]
+
+                heapq.heappush(open_list, (f, neighbor))
+
+                parent[neighbor] = current
+
+    return None, float("inf")
+
+
+# -----------------------------
+# Graph
+# -----------------------------
+
+graph = {
+    'A': [('B', 2), ('C', 1)],
+    'B': [('D', 3)],
+    'C': [('D', 1)],
+    'D': [('G', 2)],
+    'G': []
+}
+
+
+# Heuristic h(n)
+heuristic = {
+    'A': 5,
+    'B': 4,
+    'C': 3,
+    'D': 2,
+    'G': 0
+}
+
+
+# -----------------------------
+# Run A*
+# -----------------------------
+
+path, total_cost = a_star(
+    graph,
+    'A',
+    'G',
+    heuristic
+)
+
+print("Shortest Path:", " -> ".join(path))
+print("Total Cost:", total_cost)
+
+
+# -----------------------------
+# Create NetworkX graph
+# -----------------------------
+
+G = nx.DiGraph()
+
+for node in graph:
+    for neighbor, cost in graph[node]:
+        G.add_edge(node, neighbor, weight=cost)
+
+
+# -----------------------------
+# Node positions
+# -----------------------------
+
+pos = {
+    'A': (0, 1),
+    'B': (1, 2),
+    'C': (1, 0),
+    'D': (2, 1),
+    'G': (3, 1)
+}
+
+
+# -----------------------------
+# Draw nodes
+# -----------------------------
+
+nx.draw_networkx_nodes(
+    G,
+    pos,
+    node_color="lightblue",
+    node_size=2000,
+    edgecolors="black"
+)
+
+nx.draw_networkx_labels(
+    G,
+    pos,
+    font_size=15,
+    font_weight="bold"
+)
+
+
+# -----------------------------
+# Draw all edges
+# -----------------------------
+
+nx.draw_networkx_edges(
+    G,
+    pos,
+    edge_color="gray",
+    width=2,
+    arrows=True,
+    arrowsize=20
+)
+
+
+# -----------------------------
+# Display edge costs
+# -----------------------------
+
+edge_labels = nx.get_edge_attributes(G, "weight")
+
+nx.draw_networkx_edge_labels(
+    G,
+    pos,
+    edge_labels=edge_labels,
+    font_size=13,
+    font_weight="bold"
+)
+
+
+# -----------------------------
+# Highlight shortest path
+# -----------------------------
+
+path_edges = list(zip(path, path[1:]))
+
+nx.draw_networkx_edges(
+    G,
+    pos,
+    edgelist=path_edges,
+    edge_color="red",
+    width=4,
+    arrows=True,
+    arrowsize=25
+)
+
+
+# -----------------------------
+# Show total cost
+# -----------------------------
+
+plt.title(
+    f"A* Shortest Path: {' → '.join(path)}\n"
+    f"Total Cost = {total_cost}",
+    fontsize=16,
+    fontweight="bold"
+)
+
+plt.text(
+    1.5,
+    -0.5,
+    f"Path Cost: {' + '.join(str(G[u][v]['weight']) for u, v in path_edges)}"
+    f" = {total_cost}",
+    ha="center",
+    fontsize=14,
+    color="red",
+    fontweight="bold"
+)
+
+plt.axis("off")
+plt.tight_layout()
+plt.show()
+
+
+
+

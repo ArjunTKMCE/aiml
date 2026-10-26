@@ -1,0 +1,96 @@
+
+# =====================================================
+# SECTION 2: RANDOM FOREST
+# =====================================================
+
+# -----------------------------
+# A. RANDOM FOREST REGRESSION
+# -----------------------------
+
+print("RANDOM FOREST REGRESSION")
+
+rf_reg = Pipeline([
+    ("imputer", SimpleImputer(strategy="median")),
+    ("model", RandomForestRegressor(
+        n_estimators=100,
+        random_state=42,
+        n_jobs=-1
+    ))
+])
+
+rf_reg.fit(X_train, y_train)
+
+rf_pred = rf_reg.predict(X_test)
+
+print("MAE:", mean_absolute_error(y_test, rf_pred))
+print("RMSE:", np.sqrt(mean_squared_error(y_test, rf_pred)))
+print("R2 Score:", r2_score(y_test, rf_pred))
+
+# Simple graph: actual vs predicted
+plt.figure(figsize=(8, 4))
+
+plt.plot(y_test.iloc[:200].values,
+         label="Actual")
+
+plt.plot(rf_pred[:200],
+         label="Predicted")
+
+plt.title("Random Forest Regression")
+plt.xlabel("Test Records")
+plt.ylabel("Zone 1 Consumption")
+plt.legend()
+plt.grid(alpha=0.3)
+plt.show()
+
+
+# ---------------------------------
+# B. RANDOM FOREST CLASSIFICATION
+# ---------------------------------
+
+print("\nRANDOM FOREST CLASSIFICATION")
+
+rf_clf = Pipeline([
+    ("imputer", SimpleImputer(strategy="median")),
+    ("model", RandomForestClassifier(
+        n_estimators=100,
+        random_state=42,
+        n_jobs=-1
+    ))
+])
+
+rf_clf.fit(X_train, y_train_class)
+
+rf_class_pred = rf_clf.predict(X_test)
+
+print("Accuracy:",
+      accuracy_score(y_test_class, rf_class_pred))
+
+print("\nClassification Report:")
+print(classification_report(
+    y_test_class,
+    rf_class_pred,
+    zero_division=0
+))
+
+# Simple confusion matrix
+cm = confusion_matrix(
+    y_test_class,
+    rf_class_pred,
+    labels=["Low", "Medium", "High"]
+)
+
+plt.figure(figsize=(5, 4))
+
+sns.heatmap(
+    cm,
+    annot=True,
+    fmt="d",
+    cmap="Blues",
+    xticklabels=["Low", "Medium", "High"],
+    yticklabels=["Low", "Medium", "High"]
+)
+
+plt.title("Random Forest Classification")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.show()

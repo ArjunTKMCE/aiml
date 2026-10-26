@@ -1,0 +1,149 @@
+
+# =====================================================
+# SECTION 1: DATA PREPROCESSING AND CLASSIFICATION LABELS
+# =====================================================
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from google.colab import files
+
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
+from sklearn.svm import SVR, SVC
+
+from sklearn.metrics import (
+    mean_absolute_error,
+    mean_squared_error,
+    r2_score,
+    accuracy_score,
+    classification_report,
+    confusion_matrix
+)
+
+# 1. Upload dataset
+uploaded = files.upload()
+
+filename = next(iter(uploaded))
+df = pd.read_csv(filename)
+
+print("Dataset loaded successfully!")
+print("Original shape:", df.shape)
+
+# 2. Clean column names
+df.columns = (
+    df.columns.astype(str)
+    .str.strip()
+    .str.lower()
+    .str.replace(r"[^a-z0-9]+", "_", regex=True)
+    .str.strip("_")
+)
+
+# 3. Convert datetime
+df["datetime"] = pd.to_datetime(
+    df["datetime"], errors="coerce"
+)
+
+df = df.dropna(subset=["datetime"])
+df = df.sort_values("datetime")
+df = df.drop_duplicates()
+
+# 4. Convert numerical columns
+numeric_columns = [
+    "temperature", "humidity", "windspeed",
+    "generaldiffuseflows", "diffuseflows",
+    "powerconsumption_zone1",
+    "powerconsumption_zone2",
+    "powerconsumption_zone3"
+]
+
+for col in numeric_columns:
+    df[col] = pd.to_numeric(df[col], errors="coerce")
+
+df = df.replace([np.inf, -np.inf], np.nan)
+
+# 5. Remove missing or negative target values
+TARGET = "powerconsumption_zone1"
+
+df = df.dropna(subset=[TARGET])
+df = df[df[TARGET] >= 0]
+
+# 6. Create time-based features
+df["hour"] = df["datetime"].dt.hour
+df["day"] = df["datetime"].dt.day
+df["month"] = df["datetime"].dt.month
+df["day_of_week"] = df["datetime"].dt.dayofweek
+
+# 7. Define input features and target
+FEATURES = [
+    "temperature",
+    "humidity",
+    "windspeed",
+    "generaldiffuseflows",
+    "diffuseflows",
+    "powerconsumption_zone2",
+    "powerconsumption_zone3",
+    "hour",
+    "day",
+    "month",
+    "day_of_week"
+]
+
+X = df[FEATURES].copy()
+y = df[TARGET].copy()
+
+# 8. Split data chronologically (80% train, 20% test)
+split_index = int(len(df) * 0.80)
+
+X_train = X.iloc[:split_index].copy()
+X_test = X.iloc[split_index:].copy()
+
+y_train = y.iloc[:split_index].copy()
+y_test = y.iloc[split_index:].copy()
+
+# 9. Create classification labels
+low_threshold = y_train.quantile(0.33)
+high_threshold = y_train.quantile(0.66)
+
+def classify_consumption(value):
+    if value <= low_threshold:
+        return "Low"
+    elif value <= high_threshold:
+        return "Medium"
+    else:
+        return "High"
+
+y_train_class = y_train.apply(classify_consumption)
+y_test_class = y_test.apply(classify_consumption)
+
+# 10. Display results
+print("\nPREPROCESSING COMPLETED")
+
+print("Training records:", len(X_train))
+print("Testing records:", len(X_test))
+
+print("\nClassification thresholds:")
+print("Low:", round(low_threshold, 2))
+print("High:", round(high_threshold, 2))
+
+print("\nTraining class distribution:")
+print(y_train_class.value_counts())
+
+# Simple graph of categories
+y_train_class.value_counts().reindex(
+    ["Low", "Medium", "High"]
+).plot(kind="bar", figsize=(6, 4))
+
+plt.title("Electricity Consumption Categories")
+plt.xlabel("Consumption Level")
+plt.ylabel("Number of Records")
+plt.xticks(rotation=0)
+plt.grid(axis="y", alpha=0.3)
+plt.show()
+

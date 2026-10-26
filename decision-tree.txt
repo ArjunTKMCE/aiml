@@ -1,0 +1,94 @@
+
+# =====================================================
+# SECTION 3: DECISION TREE
+# =====================================================
+
+# -------------------------
+# A. DECISION TREE REGRESSION
+# -------------------------
+
+print("DECISION TREE REGRESSION")
+
+dt_reg = Pipeline([
+    ("imputer", SimpleImputer(strategy="median")),
+    ("model", DecisionTreeRegressor(
+        max_depth=10,
+        random_state=42
+    ))
+])
+
+dt_reg.fit(X_train, y_train)
+
+dt_pred = dt_reg.predict(X_test)
+
+print("MAE:", mean_absolute_error(y_test, dt_pred))
+print("RMSE:", np.sqrt(mean_squared_error(y_test, dt_pred)))
+print("R2 Score:", r2_score(y_test, dt_pred))
+
+# Simple graph
+plt.figure(figsize=(8, 4))
+
+plt.plot(y_test.iloc[:200].values,
+         label="Actual")
+
+plt.plot(dt_pred[:200],
+         label="Predicted")
+
+plt.title("Decision Tree Regression")
+plt.xlabel("Test Records")
+plt.ylabel("Zone 1 Consumption")
+plt.legend()
+plt.grid(alpha=0.3)
+plt.show()
+
+
+# --------------------------------
+# B. DECISION TREE CLASSIFICATION
+# --------------------------------
+
+print("\nDECISION TREE CLASSIFICATION")
+
+dt_clf = Pipeline([
+    ("imputer", SimpleImputer(strategy="median")),
+    ("model", DecisionTreeClassifier(
+        max_depth=10,
+        random_state=42
+    ))
+])
+
+dt_clf.fit(X_train, y_train_class)
+
+dt_class_pred = dt_clf.predict(X_test)
+
+print("Accuracy:",
+      accuracy_score(y_test_class, dt_class_pred))
+
+print("\nClassification Report:")
+print(classification_report(
+    y_test_class,
+    dt_class_pred,
+    zero_division=0
+))
+
+# Simple confusion matrix
+cm = confusion_matrix(
+    y_test_class,
+    dt_class_pred,
+    labels=["Low", "Medium", "High"]
+)
+
+plt.figure(figsize=(5, 4))
+
+sns.heatmap(
+    cm,
+    annot=True,
+    fmt="d",
+    cmap="Greens",
+    xticklabels=["Low", "Medium", "High"],
+    yticklabels=["Low", "Medium", "High"]
+)
+
+plt.title("Decision Tree Classification")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.show()

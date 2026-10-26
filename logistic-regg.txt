@@ -1,0 +1,190 @@
+````python
+import pandas as pd
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, confusion_matrix
+
+# Load the dataset
+data = pd.read_csv("data.csv")
+
+# Select input and output variables
+X = data[["Hours"]]
+y = data["Result"]
+
+# Split the dataset
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+# Create and train the model
+model = LogisticRegression()
+model.fit(X_train, y_train)
+
+# Predict test data
+y_pred = model.predict(X_test)
+
+# Display results
+print("Actual Values:", y_test.values)
+print("Predicted Values:", y_pred)
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+
+# Predict for new input
+hours = float(input("Enter hours studied: "))
+
+new_data = pd.DataFrame({"Hours": [hours]})
+
+prediction = model.predict(new_data)
+probability = model.predict_proba(new_data)
+
+if prediction[0] == 1:
+    print("Result: Pass")
+else:
+    print("Result: Fail")
+
+print("Probability of Passing:", probability[0][1])
+
+### Explanation
+
+1. **Load dataset:** `pd.read_csv()` reads the CSV file.
+2. **Select variables:** `X` contains hours studied, while `y` contains the result.
+3. **Split dataset:** `train_test_split()` divides the data into training and testing sets.
+4. **Create model:** `LogisticRegression()` creates the logistic regression model.
+5. **Train model:** `fit()` trains the model using the training data.
+6. **Predict output:** `predict()` predicts whether a student passes or fails.
+7. **Evaluate model:** `accuracy_score()` calculates accuracy, while `confusion_matrix()` shows correct and incorrect predictions.
+8. **Predict new data:** The user enters study hours to predict the result.
+9. **Calculate probability:** `predict_proba()` returns the estimated probability of each class.
+
+### Sample Output
+
+```text
+Actual Values: [0 1]
+Predicted Values: [0 1]
+Accuracy: 1.0
+Confusion Matrix:
+ [[1 0]
+  [0 1]]
+
+Enter hours studied: 8
+Result: Pass
+Probability of Passing: 0.9
+````
+
+*Note: The sample output is illustrative. Actual values depend on the trained model and data split.*
+
+---
+
+## 2. Logistic Regression Using Multiple Independent Variables
+
+Logistic Regression can also use multiple input variables to predict a binary output.
+
+### Dataset: `data.csv`
+
+```csv
+Hours,Attendance,Result
+1,50,0
+2,55,0
+3,60,0
+4,65,0
+5,70,0
+6,75,1
+7,80,1
+8,85,1
+9,90,1
+10,95,1
+```
+
+### Python Program
+
+```python
+import pandas as pd
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, confusion_matrix
+
+# Load dataset
+data = pd.read_csv("data.csv")
+
+# Select input and output variables
+X = data[["Hours", "Attendance"]]
+y = data["Result"]
+
+# Split dataset
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+# Create and train model
+model = LogisticRegression()
+model.fit(X_train, y_train)
+
+# Predict test data
+y_pred = model.predict(X_test)
+
+# Display results
+print("Actual Values:", y_test.values)
+print("Predicted Values:", y_pred)
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+
+# Predict for new input
+hours = float(input("Enter hours studied: "))
+attendance = float(input("Enter attendance percentage: "))
+
+new_data = pd.DataFrame({
+    "Hours": [hours],
+    "Attendance": [attendance]
+})
+
+prediction = model.predict(new_data)
+probability = model.predict_proba(new_data)
+
+if prediction[0] == 1:
+    print("Result: Pass")
+else:
+    print("Result: Fail")
+
+print("Probability of Passing:", probability[0][1])
+```
+
+### Explanation
+
+* `X` contains two independent variables: hours studied and attendance.
+* `y` contains the binary target variable: pass or fail.
+* `fit()` trains the model using both input variables.
+* `predict()` classifies the student as pass or fail.
+* `predict_proba()` calculates the estimated probability of passing.
+
+### Logistic Regression Equation
+
+Logistic regression uses the sigmoid function to calculate the probability of a class:
+
+$$
+P(Y=1)=\frac{1}{1+e^{-z}}
+$$
+
+For multiple variables:
+
+$$
+z=b_0+b_1x_1+b_2x_2
+$$
+
+Where:
+
+* \(x_1\) = Hours studied.
+* \(x_2\) = Attendance percentage.
+* \(b_0\) = Intercept.
+* \(b_1,b_2\) = Model coefficients.
+
+If the predicted probability is at least 0.5, the default model generally predicts class 1; otherwise, it predicts class 0.
+
+### Required Libraries
+
+Install the required libraries using:
+
+```bash
+pip install pandas scikit-learn
+```
+
+**Important:** These small datasets are for demonstrating the program. They are too small to reliably evaluate a real-world model. Use a larger dataset for meaningful accuracy estimates.
